@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Panel Principal - Dashboard</title>
+<style>
+  /* Reset & Base */
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #1e406f, #3762a8);
+    color: #fafafa;
+    min-height: 100vh;
+  }
+  header {
+    background: #0f1a2b;
+    padding: 1rem 2rem;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  header h1 {
+    margin: 0;
+    font-weight: 700;
+    font-size: 1.8rem;
+    color: #b1c8f9;
+    text-shadow: 0 0 8px #7a9aea;
+    user-select: none;
+  }
+
+  main {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+  }
+
+  /* Summary cards container */
+  .summary-cards {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 2.5rem;
+  }
+
+  /* Single card */
+  .card {
+    background: #ffffff;
+    color: #1e3c72;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(55, 98, 168, 0.25);
+    padding: 1.5rem 2rem;
+    flex: 1 1 280px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    user-select: none;
+  }
+  .card h3 {
+    font-size: 1.25rem;
+    margin-bottom: 0.8rem;
+  }
+  .card .number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: #375a98;
+    /* subtle text glow */
+    text-shadow: 0 0 6px #7a9aea;
+  }
+
+  /* Chart container */
+  #inventoryChart {
+    width: 100%;
+    max-width: 900px;
+    height: 360px;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(55, 98, 168, 0.3);
+    padding: 1rem;
+  }
+
+  /* Quick action buttons */
+  .actions {
+    margin-top: 3rem;
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+  .action-btn {
+    background: #ffffff;
+    color: #1e3c72;
+    border-radius: 14px;
+    box-shadow: 0 8px 20px rgba(55, 98, 168, 0.35);
+    padding: 1rem 2.5rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+    user-select: none;
+  }
+  .action-btn:hover,
+  .action-btn:focus {
+    background: #e6f0ff;
+    box-shadow: 0 10px 30px rgba(55, 98, 168, 0.65);
+    outline: none;
+    transform: translateY(-3px);
+  }
+  .action-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 7px 22px rgba(55, 98, 168, 0.45);
+  }
+
+  @media(max-width: 480px) {
+    .summary-cards {
+      flex-direction: column;
+      align-items: center;
+    }
+    .card {
+      flex: none;
+      width: 80vw;
+    }
+    .actions {
+      flex-direction: column;
+      gap: 1.3rem;
+      align-items: center;
+    }
+    .action-btn {
+      width: 80vw;
+      text-align: center;
+    }
+  }
+</style>
+</head>
+<body>
+  <header>
+    <h1>Panel Principal - Inventario</h1>
+  </header>
+  <main>
+    <section class="summary-cards" aria-label="Resumen del estado del inventario">
+      <article class="card" aria-live="polite">
+        <h3>Total de productos</h3>
+        <div class="number" id="totalProducts">0</div>
+      </article>
+      <article class="card" aria-live="polite">
+        <h3>Productos bajos en stock</h3>
+        <div class="number" id="lowStock">0</div>
+      </article>
+      <article class="card" aria-live="polite">
+        <h3>Entradas hoy</h3>
+        <div class="number" id="entriesToday">0</div>
+      </article>
+    </section>
+    <section aria-label="Gráfico del estado del inventario" style="text-align:center;">
+      <canvas id="inventoryChart" role="img" aria-label="Gráfico de barras del estado del inventario"></canvas>
+    </section>
+    <section class="actions" aria-label="Accesos rápidos a funciones del inventario">
+      <button class="action-btn" id="btnNewEntry" aria-describedby="descNewEntry">Registrar nueva entrada</button>
+      <button class="action-btn" id="btnHistory" aria-describedby="descHistory">Consultar historial</button>
+      <button class="action-btn" id="btnReports" aria-describedby="descReports">Generar reportes</button>
+    </section>
+  </main>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // Simulated inventory data for the chart
+  const data = {
+    labels: ['Producto A', 'Producto B', 'Producto C', 'Producto D', 'Producto E', 'Producto F'],
+    datasets: [{
+      label: 'Cantidad en stock',
+      data: [250, 90, 150, 45, 80, 120],
+      backgroundColor: '#3f65ba',
+      borderRadius: 8,
+      barPercentage: 0.6,
+    }]
+  };
+
+  // Create Chart
+  const ctx = document.getElementById('inventoryChart').getContext('2d');
+  const inventoryChart = new Chart(ctx, {
+    type: 'bar',
+    data: data,
+    options: {
+      responsive: true,
+      animation: {
+        duration: 800,
+        easing: 'easeOutQuart'
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          grid: {
+            color: '#d9e2f3'
+          },
+          ticks: {
+            color: '#375a98',
+            font: {
+              size: 14
+            }
+          }
+        },
+        x: {
+          grid: {
+            display: false
+          },
+          ticks: {
+            color: '#375a98',
+            font: {
+              size: 14
+            }
+          }
+        }
+      },
+      plugins: {
+        legend: {
+          labels: {
+            color: '#375a98',
+            font: {
+              size: 16,
+              weight: 'bold'
+            }
+          }
+        },
+        tooltip: {
+          backgroundColor: '#1e406f',
+          titleFont: { weight:'bold', size: 14 },
+          bodyFont: { size: 13 },
+          cornerRadius: 6,
+          padding: 10,
+          displayColors: false
+        }
+      }
+    }
+  });
+
+  // Set summary card values
+  document.getElementById('totalProducts').textContent = 600;
+  document.getElementById('lowStock').textContent = 27;
+  document.getElementById('entriesToday').textContent = 85;
+
+  // Button actions (placeholder)
+  document.getElementById('btnNewEntry').addEventListener('click', () => {
+    alert('Función de registrar nueva entrada no implementada.');
+  });
+  document.getElementById('btnHistory').addEventListener('click', () => {
+    alert('Función de consultar historial no implementada.');
+  });
+  document.getElementById('btnReports').addEventListener('click', () => {
+    alert('Función de generar reportes no implementada.');
+  });
+</script>
+</body>
+</html>
+
