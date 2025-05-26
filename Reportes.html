@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Generar Reportes</title>
+<style>
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0; padding: 2rem 1rem;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #1e406f, #3762a8);
+    color: #fafafa;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: start;
+  }
+  main {
+    background: #0f1a2b;
+    padding: 2.5rem 3rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 35px rgba(55, 98, 168, 0.7);
+    max-width: 480px;
+    width: 100%;
+  }
+  h1 {
+    margin-top: 0;
+    margin-bottom: 2rem;
+    text-align: center;
+    color: #b1c8f9;
+    user-select: none;
+    text-shadow: 0 0 9px #7a9aea;
+  }
+  label {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: #98acd5;
+    user-select: none;
+  }
+  input[type="date"],
+  select {
+    width: 100%;
+    padding: 0.75rem 1.2rem;
+    border-radius: 12px;
+    border: 2.5px solid #476ab2;
+    font-size: 1.1rem;
+    background-color: #193058;
+    color: white;
+    margin-bottom: 1.8rem;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+  input[type="date"]:focus,
+  select:focus {
+    border-color: #9fbce4;
+    box-shadow: 0 0 12px #a6bbdf;
+    outline: none;
+  }
+  .buttons {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+  }
+  button {
+    padding: 1rem 2rem;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #1e3c72;
+    background: #ffffff;
+    border: none;
+    border-radius: 18px;
+    box-shadow: 0 6px 25px rgba(55, 98, 168, 0.9);
+    cursor: pointer;
+    transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.15s ease;
+    user-select: none;
+  }
+  button:hover,
+  button:focus {
+    background: #e6f0ff;
+    box-shadow: 0 8px 35px rgba(55, 98, 168, 1);
+    outline: none;
+    transform: translateY(-2px);
+  }
+  button:active {
+    background: #cbdffe;
+    box-shadow: 0 5px 18px rgba(53, 83, 160, 0.8);
+    transform: translateY(0);
+  }
+  .message {
+    margin-top: 1.5rem;
+    text-align: center;
+    font-weight: 600;
+    user-select: none;
+  }
+  .error {
+    color: #ff7272;
+  }
+  .success {
+    color: #7fefa5;
+  }
+</style>
+</head>
+<body>
+  <main aria-label="Generar reportes de inventario">
+    <h1>Generar Reportes</h1>
+
+    <label for="dateFrom">Fecha desde</label>
+    <input type="date" id="dateFrom" />
+
+    <label for="dateTo">Fecha hasta</label>
+    <input type="date" id="dateTo" />
+
+    <label for="supplierSelect">Proveedor</label>
+    <select id="supplierSelect">
+      <option value="">Todos</option>
+      <option value="Proveedor A">Proveedor A</option>
+      <option value="Proveedor B">Proveedor B</option>
+      <option value="Proveedor C">Proveedor C</option>
+      <option value="Proveedor D">Proveedor D</option>
+    </select>
+
+    <div class="buttons">
+      <button id="btnPdf">Generar PDF</button>
+      <button id="btnExcel">Generar Excel</button>
+    </div>
+
+    <div id="msg" class="message" aria-live="polite" role="alert"></div>
+  </main>
+
+  <!-- jsPDF + autotable -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+  <!-- SheetJS -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<script>
+  (function(){
+    const { jsPDF } = window.jspdf;
+    const btnPdf = document.getElementById('btnPdf');
+    const btnExcel = document.getElementById('btnExcel');
+    const dateFrom = document.getElementById('dateFrom');
+    const dateTo = document.getElementById('dateTo');
+    const supplierSelect = document.getElementById('supplierSelect');
+    const msg = document.getElementById('msg');
+
+    // Simulated report data
+    const reportData = [
+      { code: 'E1023', article: 'Clavos', date: '2024-06-01', supplier: 'Proveedor A', quantity: 150 },
+      { code: 'E1024', article: 'Martillo', date: '2024-06-05', supplier: 'Proveedor B', quantity: 30 },
+      { code: 'E1025', article: 'Tornillos', date: '2024-06-04', supplier: 'Proveedor A', quantity: 75 },
+      { code: 'E1026', article: 'Pintura', date: '2024-06-07', supplier: 'Proveedor C', quantity: 45 },
+      { code: 'E1027', article: 'Taladro', date: '2024-06-02', supplier: 'Proveedor B', quantity: 20 },
+      { code: 'E1028', article: 'Pegamento', date: '2024-06-06', supplier: 'Proveedor D', quantity: 60 },
+      { code: 'E1029', article: 'Lijas', date: '2024-06-03', supplier: 'Proveedor A', quantity: 100 }
+    ];
+
+    function validateInputs() {
+      msg.textContent = '';
+      msg.className = 'message';
+      if(dateFrom.value && dateTo.value && dateFrom.value > dateTo.value){
+        msg.textContent = 'La fecha "Desde" no puede ser mayor que "Hasta".';
+        msg.classList.add('error');
+        return false;
+      }
+      return true;
+    }
+
+    function filterData() {
+      let filtered = reportData.slice();
+      if(dateFrom.value){
+        filtered = filtered.filter(d => d.date >= dateFrom.value);
+      }
+      if(dateTo.value){
+        filtered = filtered.filter(d => d.date <= dateTo.value);
+      }
+      if(supplierSelect.value){
+        filtered = filtered.filter(d => d.supplier === supplierSelect.value);
+      }
+      return filtered;
+    }
+
+    function generatePDF() {
+      if(!validateInputs()) return;
+      const filtered = filterData();
+      if(filtered.length === 0){
+        msg.textContent = 'No hay datos para generar el reporte con los filtros actuales.';
+        msg.classList.add('error');
+        return;
+      }
+      const doc = new jsPDF();
+      doc.setFontSize(18);
+      doc.setTextColor('#3f65ba');
+      doc.text('Reporte de Entradas de Inventario', 14, 22);
+      doc.setFontSize(11);
+      doc.setTextColor('#000000');
+      doc.text(`Rango: ${dateFrom.value || 'Todos'} - ${dateTo.value || 'Todos'}`, 14, 30);
+      doc.text(`Proveedor: ${supplierSelect.value || 'Todos'}`, 14, 36);
+      const body = filtered.map(item => [item.code, item.article, item.date, item.supplier, item.quantity.toString()]);
+      doc.autoTable({
+        startY: 42,
+        head: [['Código', 'Artículo', 'Fecha', 'Proveedor', 'Cantidad']],
+        body: body,
+        headStyles: {
+          fillColor: '#3f65ba',
+          textColor: 'white',
+          fontStyle: 'bold',
+        },
+        styles: {
+          halign: 'center',
+          cellPadding: 3,
+        },
+        margin: { left: 14, right: 14 },
+        theme: 'striped',
+        columnStyles: {
+          1: { halign: 'left' }
+        }
+      });
+      doc.save('reporte_entradas.pdf');
+      msg.textContent = 'Reporte PDF generado y descargado.';
+      msg.className = 'message success';
+    }
+
+    function generateExcel() {
+      if(!validateInputs()) return;
+      const filtered = filterData();
+      if(filtered.length === 0){
+        msg.textContent = 'No hay datos para generar el reporte con los filtros actuales.';
+        msg.classList.add('error');
+        return;
+      }
+      const ws_data = [
+        ['Código', 'Artículo', 'Fecha', 'Proveedor', 'Cantidad'],
+        ...filtered.map(item => [item.code, item.article, item.date, item.supplier, item.quantity])
+      ];
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(ws_data);
+      XLSX.utils.book_append_sheet(wb, ws, 'Reporte');
+      XLSX.writeFile(wb, 'reporte_entradas.xlsx');
+      msg.textContent = 'Reporte Excel generado y descargado.';
+      msg.className = 'message success';
+    }
+
+    btnPdf.addEventListener('click', generatePDF);
+    btnExcel.addEventListener('click', generateExcel);
+
+  })();
+</script>
+</body>
+</html>
