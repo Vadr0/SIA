@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Pantalla de Login</title>
+<style>
+  /* Reset & Base */
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #1e406f, #3762a8);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #333;
+  }
+
+  /* Container */
+  .login-container {
+    background: #0f1a2b;
+    padding: 2.5rem 3.5rem;
+    border-radius: 18px;
+    box-shadow: 0 10px 40px rgba(55, 98, 168, 0.5);
+    width: 100%;
+    max-width: 420px;
+    text-align: center;
+    color: #fafafa;
+  }
+
+  /* Title */
+  h2 {
+    font-weight: 700;
+    color: #b1c8f9;
+    margin-bottom: 2rem;
+    letter-spacing: 1.2px;
+    text-shadow: 0 0 8px #7a9aea;
+    user-select: none;
+  }
+
+  /* Input field wrapper with white background */
+  .input-field {
+    margin-bottom: 1.3rem;
+    text-align: left;
+    background: white;
+    border-radius: 12px;
+    padding: 0.6rem 1rem;
+    box-shadow: 0 5px 12px rgba(55, 98, 168, 0.25);
+  }
+  .input-field label {
+    display: block;
+    font-weight: 600;
+    color: #375a98;
+    margin-bottom: 0.4rem;
+    letter-spacing: 0.03em;
+  }
+  .input-field input {
+    width: 100%;
+    padding: 0.65rem 0.5rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 1.05rem;
+    background-color: #f9faff;
+    color: #222;
+    transition: box-shadow 0.3s ease;
+    box-shadow: inset 0 0 5px #c4d0f8;
+  }
+  .input-field input::placeholder {
+    color: #8d9cbb;
+  }
+  .input-field input:focus {
+    box-shadow: 0 0 10px #7a9aea;
+    outline: none;
+    background-color: #f4f7ff;
+  }
+
+  /* Button with white background and metallic blue text & shadow */
+  button {
+    width: 100%;
+    padding: 0.95rem;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #1e3c72;
+    background: #ffffff;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(55, 98, 168, 0.9);
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+    user-select: none;
+  }
+  button:hover,
+  button:focus {
+    background: #e6f0ff;
+    box-shadow: 0 8px 24px rgba(55, 98, 168, 1);
+    outline: none;
+  }
+  button:active {
+    background: #cbdffe;
+  }
+
+  /* Error message */
+  .error-message {
+    margin-top: 1rem;
+    color: #ff6363;
+    font-weight: 700;
+    text-align: center;
+    letter-spacing: 0.02em;
+    text-shadow: 0 0 8px #d15b5b;
+    user-select: none;
+  }
+</style>
+</head>
+<body>
+  <main class="login-container" role="main" aria-labelledby="loginTitle">
+    <h2 id="loginTitle">Acceso de Usuarios</h2>
+    <form id="loginForm" novalidate>
+      <div class="input-field">
+        <label for="email">Correo electrónico</label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          placeholder="ejemplo@dominio.com"
+          required
+          autocomplete="username"
+          aria-describedby="emailHelp"
+        />
+      </div>
+      <div class="input-field">
+        <label for="password">Contraseña</label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          placeholder="••••••••"
+          required
+          minlength="6"
+          autocomplete="current-password"
+          aria-describedby="passwordHelp"
+        />
+      </div>
+      <button type="submit" aria-label="Acceder al sistema">Acceder</button>
+      <p id="errorMessage" class="error-message" aria-live="polite" role="alert" style="display:none;"></p>
+    </form>
+  </main>
+
+<script>
+  document.getElementById('loginForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+    const emailInput = event.target.email;
+    const passwordInput = event.target.password;
+    const errorMessage = document.getElementById('errorMessage');
+
+    errorMessage.style.display = 'none';
+    errorMessage.textContent = '';
+
+    const emailValue = emailInput.value.trim();
+    const passwordValue = passwordInput.value;
+
+    if (!emailValue) {
+      errorMessage.textContent = 'Por favor, ingresa un correo electrónico.';
+      errorMessage.style.display = 'block';
+      emailInput.focus();
+      return;
+    }
+    if (!validateEmail(emailValue)) {
+      errorMessage.textContent = 'Formato de correo inválido.';
+      errorMessage.style.display = 'block';
+      emailInput.focus();
+      return;
+    }
+    if (!passwordValue) {
+      errorMessage.textContent = 'Por favor, ingresa la contraseña.';
+      errorMessage.style.display = 'block';
+      passwordInput.focus();
+      return;
+    }
+    if (passwordValue.length < 6) {
+      errorMessage.textContent = 'La contraseña debe tener al menos 6 caracteres.';
+      errorMessage.style.display = 'block';
+      passwordInput.focus();
+      return;
+    }
+
+    if (emailValue === 'user@test.com' && passwordValue === 'password123') {
+      alert('¡Inicio de sesión exitoso!');
+    } else {
+      errorMessage.textContent = 'Credenciales inválidas. Intenta nuevamente.';
+      errorMessage.style.display = 'block';
+    }
+  });
+
+  function validateEmail(email) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email.toLowerCase());
+  }
+</script>
+</body>
+</html>
