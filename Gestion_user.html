@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Gestión de Usuarios (Administrador)</title>
+<style>
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0; padding: 1.5rem;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #1e406f, #3762a8);
+    color: #fafafa;
+    min-height: 100vh;
+  }
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: #0f1a2b;
+    padding: 2rem 2.5rem 3rem;
+    border-radius: 20px;
+    box-shadow: 0 12px 40px rgba(55, 98, 168, 0.7);
+  }
+  h1 {
+    margin-top: 0;
+    text-align: center;
+    color: #b1c8f9;
+    user-select: none;
+    text-shadow: 0 0 9px #7a9aea;
+  }
+
+  /* Table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #1f2c56;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 10px 25px rgba(55, 98, 168, 0.6);
+    margin-top: 1.5rem;
+    user-select: none;
+  }
+  thead tr {
+    background: #375a98;
+  }
+  thead th {
+    padding: 0.9rem 1rem;
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: #dce7ff;
+    text-align: left;
+  }
+  tbody tr {
+    border-bottom: 1px solid #2f477e;
+    transition: background-color 0.22s ease;
+  }
+  tbody tr:nth-child(even) {
+    background: #2e3f6c;
+  }
+  tbody tr:hover {
+    background-color: #557bdfbc;
+  }
+  tbody td {
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    color: #c6d5f3;
+  }
+
+  /* Button styles */
+  button {
+    cursor: pointer;
+    font-weight: 700;
+    border: none;
+    border-radius: 12px;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    user-select: none;
+    transition: background-color 0.25s ease, box-shadow 0.25s ease;
+  }
+  button:focus {
+    outline: 3px solid #a0bcff;
+    outline-offset: 2px;
+  }
+  .btn-primary {
+    background: #3f65ba;
+    color: white;
+    box-shadow: 0 6px 18px rgba(63, 101, 186, 0.8);
+  }
+  .btn-primary:hover {
+    background: #557bde;
+    box-shadow: 0 8px 28px rgba(85, 123, 222, 0.9);
+  }
+  .btn-danger {
+    background: #d23f3f;
+    color: white;
+    box-shadow: 0 6px 18px rgba(210, 63, 63, 0.8);
+  }
+  .btn-danger:hover {
+    background: #e05656;
+    box-shadow: 0 8px 28px rgba(224, 86, 86, 0.9);
+  }
+  .btn-secondary {
+    background: #7a9aea;
+    color: #1e3c72;
+    box-shadow: 0 5px 15px rgba(122, 154, 234, 0.7);
+  }
+  .btn-secondary:hover {
+    background: #a0bcff;
+    box-shadow: 0 6px 22px rgba(160, 188, 255, 0.85);
+  }
+
+  /* User form modal */
+  .modal-bg {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    inset: 0;
+    background: rgba(15, 26, 43, 0.9);
+    backdrop-filter: blur(6px);
+    justify-content: center;
+    align-items: center;
+  }
+  .modal-bg.active {
+    display: flex;
+  }
+  .modal {
+    background: white;
+    border-radius: 16px;
+    max-width: 420px;
+    width: 100%;
+    padding: 2rem 2.5rem;
+    box-shadow: 0 12px 40px rgba(55, 98, 168, 0.4);
+    color: #1e3c72;
+    user-select: none;
+  }
+  .modal h2 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    color: #375a98;
+    user-select: none;
+  }
+  .modal label {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+  }
+  .modal input[type="text"],
+  .modal input[type="email"],
+  .modal select {
+    width: 100%;
+    margin-bottom: 1.3rem;
+    padding: 0.7rem 1rem;
+    font-size: 1rem;
+    border-radius: 12px;
+    border: 2px solid #aac4ff;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    font-family: inherit;
+  }
+  .modal input[type="text"]:focus,
+  .modal input[type="email"]:focus,
+  .modal select:focus {
+    border-color: #375a98;
+    box-shadow: 0 0 12px #7a9aea;
+    outline: none;
+    background-color: #f3f7ff;
+  }
+  .modal .modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+  }
+  .modal .modal-buttons button {
+    padding: 0.8rem 1.6rem;
+    font-size: 1rem;
+  }
+
+  /* Action buttons */
+  .actions-col {
+    display: flex;
+    gap: 0.6rem;
+  }
+
+  /* Responsive */
+  @media(max-width: 600px) {
+    tbody td, thead th {
+      font-size: 0.85rem;
+      padding: 0.55rem 0.7rem;
+    }
+    .modal {
+      padding: 1.5rem 1.8rem;
+    }
+  }
+</style>
+</head>
+<body>
+  <main aria-label="Gestión de usuarios">
+    <h1>Gestión de Usuarios</h1>
+    <button id="btnAddUser" class="btn-primary" aria-haspopup="dialog" aria-controls="userModal">Crear Nuevo Usuario</button>
+
+    <table aria-describedby="gestUsuariosDesc" aria-live="polite" role="grid" id="usersTable" tabindex="0">
+      <caption id="gestUsuariosDesc" style="text-align:left; padding:0.5rem 0; color:#9cb2f7;">
+        Lista de usuarios existentes y opciones para gestionar sus cuentas y roles.
+      </caption>
+      <thead>
+        <tr>
+          <th>Nombre de Usuario</th>
+          <th>Correo Electrónico</th>
+          <th>Rol</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Usuarios generados por JS -->
+      </tbody>
+    </table>
+  </main>
+
+  <!-- Modal para crear/editar usuario -->
+  <div id="userModal" class="modal-bg" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalDesc">
+    <div class="modal" role="document">
+      <h2 id="modalTitle">Nuevo Usuario</h2>
+      <form id="userForm" novalidate>
+        <label for="username">Nombre de Usuario<span aria-hidden="true">*</span></label>
+        <input type="text" id="username" name="username" autocomplete="off" required aria-describedby="usernameFeedback" />
+        <div id="usernameFeedback" class="feedback" aria-live="polite"></div>
+
+        <label for="email">Correo Electrónico<span aria-hidden="true">*</span></label>
+        <input type="email" id="email" name="email" required aria-describedby="emailFeedback" />
+        <div id="emailFeedback" class="feedback" aria-live="polite"></div>
+
+        <label for="role">Rol<span aria-hidden="true">*</span></label>
+        <select id="role" name="role" required aria-describedby="roleFeedback">
+          <option value="" disabled selected>Seleccione un rol</option>
+          <option value="Administrador">Administrador</option>
+          <option value="Usuario">Usuario</option>
+        </select>
+        <div id="roleFeedback" class="feedback" aria-live="polite"></div>
+
+        <div class="modal-buttons">
+          <button type="button" class="btn-secondary" id="btnCancel">Cancelar</button>
+          <button type="submit" class="btn-primary" id="btnSave">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+<script>
+  const usersTableBody = document.querySelector('#usersTable tbody');
+  const btnAddUser = document.getElementById('btnAddUser');
+  const userModal = document.getElementById('userModal');
+  const modalTitle = document.getElementById('modalTitle');
+  const userForm = document.getElementById('userForm');
+  const btnCancel = document.getElementById('btnCancel');
+  const btnSave = document.getElementById('btnSave');
+
+  // Feedback elements
+  const usernameInput = document.getElementById('username');
+  const emailInput = document.getElementById('email');
+  const roleSelect = document.getElementById('role');
+
+  const usernameFeedback = document.getElementById('usernameFeedback');
+  const emailFeedback = document.getElementById('emailFeedback');
+  const roleFeedback = document.getElementById('roleFeedback');
+
+  // Simulated users list
+  let users = [
+    { username: 'admin', email: 'admin@empresa.com', role: 'Administrador' },
+    { username: 'jose', email: 'jose@example.com', role: 'Usuario' },
+    { username: 'maria', email: 'maria@example.com', role: 'Usuario' }
+  ];
+
+  let editingIndex = null; // null = new user, number = edit index
+
+  // Render users table
+  function renderUsers() {
+    usersTableBody.innerHTML = '';
+    users.forEach((user, index) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${user.username}</td>
+        <td>${user.email}</td>
+        <td>${user.role}</td>
+        <td class="actions-col" role="group" aria-label="Acciones para usuario ${user.username}">
+          <button type="button" class="btn-secondary" aria-label="Editar usuario ${user.username}" data-index="${index}" data-action="edit">✏️</button>
+          <button type="button" class="btn-danger" aria-label="Eliminar usuario ${user.username}" data-index="${index}" data-action="delete">🗑️</button>
+        </td>
+      `;
+      usersTableBody.appendChild(tr);
+    });
+  }
+
+  // Show modal
+  function showModal(edit = false) {
+    userModal.classList.add('active');
+    if(edit) {
+      modalTitle.textContent = 'Editar Usuario';
+    } else {
+      modalTitle.textContent = 'Nuevo Usuario';
+    }
+    userForm.reset();
+    clearFeedback();
+    if(edit && editingIndex !== null){
+      const u = users[editingIndex];
+      usernameInput.value = u.username;
+      emailInput.value = u.email;
+      roleSelect.value = u.role;
+      usernameInput.disabled = true; // username can't change on edit
+    } else {
+      usernameInput.disabled = false;
+    }
+    usernameInput.focus();
+  }
+
+  // Hide modal
+  function hideModal() {
+    userModal.classList.remove('active');
+    editingIndex = null;
+  }
+
+  // Clear feedback
+  function clearFeedback() {
+    [usernameFeedback, emailFeedback, roleFeedback].forEach(el => {
+      el.textContent = '';
+      el.className = 'feedback';
+    });
+  }
+
+  // Validation helpers
+  function validateEmail(email) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email.toLowerCase());
+  }
+  function validateUsername() {
+    const val = usernameInput.value.trim();
+    if(!val){
+      usernameFeedback.textContent = 'El nombre de usuario es obligatorio.';
+      usernameFeedback.className = 'feedback error';
+      return false;
+    }
+    if(editingIndex === null && users.some(u => u.username.toLowerCase() === val.toLowerCase())){
+      usernameFeedback.textContent = 'Este nombre de usuario ya existe.';
+      usernameFeedback.className = 'feedback error';
+      return false;
+    }
+    usernameFeedback.textContent = '';
+    usernameFeedback.className = 'feedback';
+    return true;
+  }
+  function validateEmailInput() {
+    const val = emailInput.value.trim();
+    if(!val) {
+      emailFeedback.textContent = 'El correo electrónico es obligatorio.';
+      emailFeedback.className = 'feedback error';
+      return false;
+    }
+    if(!validateEmail(val)){
+      emailFeedback.textContent = 'Formato de correo inválido.';
+      emailFeedback.className = 'feedback error';
+      return false;
+    }
+    emailFeedback.textContent = '';
+    emailFeedback.className = 'feedback';
+    return true;
+  }
+  function validateRole() {
+    const val = roleSelect.value;
+    if(!val){
+      roleFeedback.textContent = 'Debe seleccionar un rol.';
+      roleFeedback.className = 'feedback error';
+      return false;
+    }
+    roleFeedback.textContent = '';
+    roleFeedback.className = 'feedback';
+    return true;
+  }
+
+  usernameInput.addEventListener('input', validateUsername);
+  emailInput.addEventListener('input', validateEmailInput);
+  roleSelect.addEventListener('change', validateRole);
+
+  // Handle user form submission
+  userForm.addEventListener('submit', function(event){
+    event.preventDefault();
+    clearFeedback();
+    let valid = true;
+    if(!validateUsername()) valid = false;
+    if(!validateEmailInput()) valid = false;
+    if(!validateRole()) valid = false;
+    if(!valid) return;
+
+    // Gather data
+    const userData = {
+      username: usernameInput.value.trim(),
+      email: emailInput.value.trim(),
+      role: roleSelect.value
+    };
+
+    if(editingIndex === null) {
+      // New user
+      users.push(userData);
+    } else {
+      // Update user
+      users[editingIndex].email = userData.email;
+      users[editingIndex].role = userData.role;
+    }
+    renderUsers();
+    hideModal();
+  });
+
+  // Table action buttons (edit/delete)
+  usersTableBody.addEventListener('click', e => {
+    const btn = e.target.closest('button');
+    if(!btn) return;
+    const index = btn.getAttribute('data-index');
+    const action = btn.getAttribute('data-action');
+    if(index === null || !action) return;
+    if(action === 'edit'){
+      editingIndex = Number(index);
+      showModal(true);
+    } else if(action === 'delete'){
+      if(confirm(`¿Eliminar usuario "${users[index].username}"? Esta acción no se puede deshacer.`)){
+        users.splice(index, 1);
+        renderUsers();
+      }
+    }
+  });
+
+  btnAddUser.addEventListener('click', () => {
+    editingIndex = null;
+    showModal(false);
+  });
+
+  btnCancel.addEventListener('click', hideModal);
+
+  // Accessibility: close modal on Escape key
+  window.addEventListener('keydown', e => {
+    if(e.key === 'Escape' && userModal.classList.contains('active')){
+      hideModal();
+    }
+  });
+
+  // Initial render
+  renderUsers();
+</script>
+</body>
+</html>
